@@ -120,9 +120,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwAGxrSQQwrOEC8FK8evt1x
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(Object.assign({ action: action }, payload || {}))
       });
-    } catch (e) { throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'); }
+    } catch (e) { const err = new Error('Tidak dapat terhubung ke server.'); err.isNetwork = true; throw err; }
     let j;
-    try { j = await res.json(); } catch (e) { throw new Error('Server tidak merespons dengan benar (' + res.status + ').'); }
+    try { j = await res.json(); } catch (e) { const err = new Error('Server sedang sibuk (' + res.status + ').'); err.isNetwork = true; throw err; }
     if (!j || !j.ok) throw new Error((j && j.error) || 'Terjadi kesalahan pada server.');
     return j.data;
   }
@@ -348,7 +348,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwAGxrSQQwrOEC8FK8evt1x
   function blobToB64(blob) {
     return new Promise((res, rej) => {
       const r = new FileReader();
-      r.onload = () => res(String(r.result).split(',')[1] || '');
+      // Ambil isi setelah "base64," — JANGAN split di koma pertama, karena
+      // MIME Chrome berisi koma (video/webm;codecs=vp8,opus).
+      r.onload = () => { const d = String(r.result || ''); const k = d.indexOf('base64,'); res(k >= 0 ? d.slice(k + 7) : ''); };
       r.onerror = () => rej(r.error);
       r.readAsDataURL(blob);
     });
@@ -358,26 +360,33 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwAGxrSQQwrOEC8FK8evt1x
     S.retry = upload;
     hideBtns(); $('upErr').classList.add('hidden');
     $('phase').textContent = 'Mengirim jawaban... jangan tutup halaman ini.';
+    if (!S.blob || !S.blob.size) { showRetry('Rekaman kosong — kamera tidak merekam apa pun.', false); return; }
     let b64 = '';
     try { b64 = await blobToB64(S.blob); } catch (e) {}
-    if (!b64) { showRetry('Rekaman gagal dibaca dari perangkat.'); return; }
+    if (!b64) { showRetry('Rekaman gagal dibaca dari perangkat.', false); return; }
+    const mb = (S.blob.size / 1048576).toFixed(1);
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
+        $('phase').textContent = 'Mengirim jawaban (' + mb + ' MB)... jangan tutup halaman ini.';
         await api('ivUploadAnswer', { id: S.id, token: S.token, idx: S.qIdx, b64: b64, mime: S.blob.type, dur: S.dur });
         if (S.sess.answered.indexOf(S.qIdx) < 0) S.sess.answered.push(S.qIdx);
         $('phase').textContent = '✓ Jawaban terkirim.';
         await sleep(800);
         return nextQuestion();
       } catch (e) {
-        if (attempt === 3) return showRetry('Gagal mengirim jawaban: ' + e.message);
-        $('phase').textContent = 'Koneksi lambat, mencoba lagi (' + (attempt + 1) + '/3)...';
+        // Error dari server (bukan jaringan) tidak akan sembuh dengan dicoba ulang otomatis
+        if (!e.isNetwork) return showRetry('Gagal mengirim jawaban: ' + e.message, false);
+        if (attempt === 3) return showRetry('Gagal mengirim jawaban: ' + e.message, true);
+        $('phase').textContent = 'Koneksi terputus, mencoba lagi (' + (attempt + 1) + '/3)...';
         await sleep(2500 * attempt);
       }
     }
   }
 
-  function showRetry(msg) {
-    $('upErr').textContent = msg + ' Periksa koneksi internet, lalu tekan "Kirim Ulang".';
+  function showRetry(msg, isNetwork) {
+    $('upErr').textContent = msg + (isNetwork
+      ? ' Periksa koneksi internet, lalu tekan "Kirim Ulang".'
+      : ' Tekan "Kirim Ulang". Jika tetap gagal, hubungi HR.');
     $('upErr').classList.remove('hidden');
     $('btnRetry').classList.remove('hidden');
     $('phase').textContent = '';
@@ -389,7 +398,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwAGxrSQQwrOEC8FK8evt1x
     hideBtns(); $('upErr').classList.add('hidden');
     $('phase').textContent = 'Menyimpan sesi interview...';
     try { await api('ivFinish', { id: S.id, token: S.token }); }
-    catch (e) { return showRetry('Gagal menyelesaikan sesi: ' + e.message + '.'); }
+    catch (e) { return showRetry('Gagal menyelesaikan sesi: ' + e.message + '.', !!e.isNetwork); }
     window.removeEventListener('beforeunload', warnLeave);
     stopStream();
     show('sDone');
