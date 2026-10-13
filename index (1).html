@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interview AI — Shelter Indonesia</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--navy:#102b53;--blue:#2c67a9;--pale:#eaf3fc;--ink:#1f3149;--muted:#687a90;--green:#1d8266;--red:#c2414b}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
+.top{background:linear-gradient(115deg,#0d2a56,#18477f);color:#fff;padding:16px 20px}
+.top b{font-size:15px;letter-spacing:.04em}.top span{display:block;font-size:12px;color:#b2cceb}
+.wrap{max-width:760px;margin:18px auto;padding:0 14px 40px}
+.card{background:#fff;border:1px solid #e3ebf4;border-radius:16px;box-shadow:0 12px 36px rgba(24,54,95,.07);padding:22px}
+h1{font-size:21px;margin:0 0 6px}h2{font-size:17px;margin:0 0 10px}
+.muted{color:var(--muted);font-size:13px}
+.btn{border:0;border-radius:10px;padding:13px 18px;font-weight:700;font-size:14px;cursor:pointer;background:#215e9f;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn-full{width:100%}.btn-light{background:#edf4fc;color:#265c93}.btn-red{background:var(--red)}
+.list{padding-left:20px;margin:10px 0}.list li{margin-bottom:6px;font-size:14px}
+.consent{display:flex;gap:10px;align-items:flex-start;background:#f7fbff;border:1px solid #dbe8f5;border-radius:10px;padding:12px;font-size:13px;margin:14px 0;cursor:pointer}
+.consent input{margin-top:2px;width:18px;height:18px;flex-shrink:0}
+.video-box{position:relative;background:#0b1a30;border-radius:14px;overflow:hidden;aspect-ratio:4/3;max-height:50vh;margin:0 auto}
+.video-box video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.rec-badge{position:absolute;top:10px;left:10px;background:rgba(194,65,75,.92);color:#fff;font-size:12px;font-weight:700;padding:5px 10px;border-radius:20px;display:none;align-items:center;gap:6px}
+.rec-badge.on{display:inline-flex}.rec-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.timer{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:15px;padding:5px 11px;border-radius:20px;font-variant-numeric:tabular-nums}
+.bot{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.avatar{flex-shrink:0;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2c67a9,#102b53);display:grid;place-items:center;font-size:25px}
+.avatar.talk{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(44,103,169,.55)}70%{box-shadow:0 0 0 14px rgba(44,103,169,0)}100%{box-shadow:0 0 0 0 rgba(44,103,169,0)}}
+.bubble{background:var(--pale);border-radius:4px 14px 14px 14px;padding:12px 14px;flex:1}
+.bubble small{display:block;color:var(--blue);font-weight:800;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.bubble p{margin:0;font-size:16px;font-weight:600}
+.progress{height:6px;background:#e3ebf4;border-radius:6px;overflow:hidden;margin:10px 0 6px}.progress i{display:block;height:100%;background:var(--blue);width:0;transition:width .4s linear}
+.phase{text-align:center;font-size:13px;color:var(--muted);margin:8px 0;min-height:20px}
+.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.actions .btn{flex:1;min-width:150px}
+.meter{height:8px;background:#e3ebf4;border-radius:6px;overflow:hidden;margin:6px 0 4px}.meter i{display:block;height:100%;width:0;background:var(--green);transition:width .1s}
+.alert{border-radius:10px;padding:12px 14px;font-size:13px;margin:12px 0}
+.alert.err{background:#fcebea;color:#8f2f37;border:1px solid #f4cfd1}.alert.info{background:#eff6fc;color:#3c5e7d;border:1px solid #dfebf7}
+.center{text-align:center}.big-icon{font-size:46px;margin-bottom:6px}
+.hidden{display:none!important}
+.steps{display:flex;gap:5px;margin-bottom:14px}.steps span{flex:1;height:5px;border-radius:4px;background:#e3ebf4}.steps span.done{background:var(--green)}.steps span.now{background:var(--blue)}
+</style>
+</head>
+<body>
+<div class="top"><b id="hdCompany">SHELTER INDONESIA</b><span>Interview AI • Rekrutmen</span></div>
+<div class="wrap">
+
+  <div class="card center" id="sLoading"><div class="big-icon">⏳</div><p class="muted">Memuat sesi interview...</p></div>
+
+  <div class="card center hidden" id="sError"><div class="big-icon">⚠️</div><h2>Interview belum bisa dibuka</h2><p class="muted" id="errText"></p></div>
+
+  <div class="card hidden" id="sWelcome">
+    <h1>Halo, <span id="wName"></span> 👋</h1>
+    <p class="muted">Posisi: <b id="wJob"></b><br>Jadwal: <span id="wSchedule"></span></p>
+    <div class="bot"><div class="avatar">🤖</div><div class="bubble"><small>AI Interviewer</small><p>Saya akan memandu interview Anda. Ada <span id="wCount"></span> pertanyaan, perkiraan waktu ± <span id="wDur"></span> menit.</p></div></div>
+    <h2>Cara kerja</h2>
+    <ol class="list">
+      <li>AI Interviewer membacakan setiap pertanyaan. Pastikan <b>suara perangkat menyala</b>.</li>
+      <li>Ada waktu persiapan <b id="wPrep"></b> detik, lalu kamera <b>otomatis merekam</b> jawaban Anda.</li>
+      <li>Setiap pertanyaan hanya dijawab <b>satu kali</b>. Tekan <b>Selesai Menjawab</b> bila jawaban sudah cukup.</li>
+      <li>Jika koneksi terputus, buka kembali link yang sama. Interview berlanjut dari pertanyaan yang belum dijawab.</li>
+    </ol>
+    <div class="alert info">💡 Gunakan tempat yang tenang dan cukup terang, wajah terlihat jelas, dan internet stabil.</div>
+    <label class="consent"><input type="checkbox" id="consent"><span>Saya menyetujui jawaban saya direkam dalam bentuk video dan dianalisis dengan bantuan AI oleh <span class="cName"></span> untuk keperluan proses rekrutmen.</span></label>
+    <button class="btn btn-full" id="btnCheck" disabled>Lanjut: Cek Kamera &amp; Mikrofon</button>
+  </div>
+
+  <div class="card hidden" id="sCheck">
+    <h2>Cek Kamera &amp; Mikrofon</h2>
+    <div class="video-box"><video id="preview" autoplay playsinline muted></video></div>
+    <p class="muted" style="margin:10px 0 0">Coba bicara — bar hijau harus bergerak:</p>
+    <div class="meter"><i id="meter"></i></div>
+    <div class="alert err hidden" id="camErr"></div>
+    <div class="actions"><button class="btn btn-light" id="btnRetryCam">↻ Coba Lagi</button><button class="btn" id="btnBegin" disabled>Mulai Interview ▶</button></div>
+  </div>
+
+  <div class="card hidden" id="sInterview">
+    <div class="steps" id="steps"></div>
+    <div class="bot"><div class="avatar" id="avatar">🤖</div><div class="bubble"><small id="qLabel">AI Interviewer</small><p id="qText"></p></div></div>
+    <div class="video-box"><video id="live" autoplay playsinline muted></video><div class="rec-badge" id="recBadge"><span class="rec-dot"></span>MEREKAM</div><div class="timer" id="timer">0:00</div></div>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="phase" id="phase"></div>
+    <div class="alert err hidden" id="upErr"></div>
+    <div class="actions">
+      <button class="btn btn-light hidden" id="btnRepeat">🔊 Ulangi Pertanyaan</button>
+      <button class="btn hidden" id="btnStartNow">Mulai Menjawab Sekarang</button>
+      <button class="btn btn-red hidden" id="btnStop">■ Selesai Menjawab</button>
+      <button class="btn hidden" id="btnRetry">↻ Kirim Ulang</button>
+    </div>
+  </div>
+
+  <div class="card center hidden" id="sDone"><div class="big-icon">✅</div><h2>Interview selesai</h2><p class="muted">Terima kasih, <b id="dName"></b>. Semua jawaban Anda sudah kami terima. Tim rekrutmen <span class="cName"></span> akan menghubungi Anda untuk tahap berikutnya.</p><p class="muted">Anda boleh menutup halaman ini.</p></div>
+</div>
+
+<script>
+// =====================================================================
+// 🔴 PASTE URL WEB APP APPS SCRIPT ANDA (yang berakhiran /exec) DI SINI 🔴
+const API_URL = "https://script.google.com/macros/s/AKfycbwAGxrSQQwrOEC8FK8evt1xgkK9Er1GE2SATrtROn1FkKPM-5vVhLVNYLHRxQi3c1x-/exec";
+// =====================================================================
+
+(function () {
+  const $ = id => document.getElementById(id);
+  const S = { id: '', token: '', sess: null, stream: null, rec: null, chunks: [], mime: '', qIdx: 0, timerId: null, audioCtx: null, voices: [], blob: null, dur: 0, repeated: false, retry: null };
+  const SCREENS = ['sLoading', 'sError', 'sWelcome', 'sCheck', 'sInterview', 'sDone'];
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  function show(id) { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+  function fail(msg) { $('errText').textContent = msg; stopStream(); show('sError'); }
+  function hideBtns() { ['btnRepeat', 'btnStartNow', 'btnStop', 'btnRetry'].forEach(b => $(b).classList.add('hidden')); }
+  // Panggil API Apps Script (doPost). Content-Type text/plain agar tanpa preflight CORS.
+  async function api(action, payload) {
+    let res;
+    try {
+      res = await fetch(API_URL, {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+      });
+    } catch (e) { throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'); }
+    let j;
+    try { j = await res.json(); } catch (e) { throw new Error('Server tidak merespons dengan benar (' + res.status + ').'); }
+    if (!j || !j.ok) throw new Error((j && j.error) || 'Terjadi kesalahan pada server.');
+    return j.data;
+  }
+
+  // ---------------- SUARA AI INTERVIEWER ----------------
+  function loadVoices() { try { S.voices = window.speechSynthesis.getVoices() || []; } catch (e) {} }
+  if ('speechSynthesis' in window) { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; }
+  function unlockSpeech() { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+  function say(text, label) {
+    if (label) $('qLabel').textContent = label;
+    $('qText').textContent = text;
+    return new Promise(resolve => {
+      if (!('speechSynthesis' in window)) return resolve();
+      let done = false;
+      const end = () => { if (done) return; done = true; $('avatar').classList.remove('talk'); resolve(); };
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'id-ID'; u.rate = 0.95;
+        const v = S.voices.find(x => /^id[-_]ID/i.test(x.lang)) || S.voices.find(x => /^id/i.test(x.lang));
+        if (v) u.voice = v;
+        u.onend = end; u.onerror = end;
+        setTimeout(end, Math.min(60000, 3000 + text.length * 90)); // pengaman bila TTS macet
+        $('avatar').classList.add('talk');
+        speechSynthesis.speak(u);
+      } catch (e) { end(); }
+    });
+  }
+
+  // ---------------- INISIALISASI ----------------
+  if (!/^https:\/\/script\.google\.com\//.test(API_URL)) { fail('Halaman belum dikonfigurasi (API_URL). Hubungi HR.'); return; }
+  (async function init() {
+    const q = new URLSearchParams(window.location.search);
+    S.id = String(q.get('interview') || '').trim();
+    S.token = String(q.get('t') || '').trim();
+    if (!S.id) return fail('Link interview tidak lengkap. Pastikan Anda membuka link utuh dari HR.');
+    try { S.sess = await api('ivGetSession', { id: S.id, token: S.token }); }
+    catch (e) { return fail(e.message); }
+    renderWelcome();
+  })();
+
+  function renderWelcome() {
+    const s = S.sess;
+    document.querySelectorAll('.cName').forEach(el => el.textContent = s.company);
+    $('hdCompany').textContent = String(s.company).toUpperCase();
+    $('dName').textContent = s.candidateName;
+    if (s.finished) return show('sDone');
+    if (!s.ready) return fail('Pertanyaan interview untuk sesi ini belum disiapkan oleh HR. Silakan coba beberapa saat lagi atau hubungi HR.');
+    $('wName').textContent = s.candidateName;
+    $('wJob').textContent = s.jobName;
+    $('wSchedule').textContent = s.schedule;
+    $('wCount').textContent = s.questions.length;
+    $('wPrep').textContent = s.prepSec;
+    const total = s.questions.reduce((n, q) => n + Number(q.answerSec) + Number(s.prepSec) + 20, 0);
+    $('wDur').textContent = Math.max(1, Math.round(total / 60));
+    if (s.answered.length) $('btnCheck').textContent = 'Lanjutkan Interview (' + s.answered.length + '/' + s.questions.length + ' sudah dijawab)';
+    show('sWelcome');
+  }
+
+  $('consent').addEventListener('change', e => { $('btnCheck').disabled = !e.target.checked; });
+  $('btnCheck').addEventListener('click', () => { unlockSpeech(); show('sCheck'); startCamera(); });
+  $('btnRetryCam').addEventListener('click', startCamera);
+
+  // ---------------- KAMERA & MIKROFON ----------------
+  function camError(m) { $('camErr').textContent = m; $('camErr').classList.remove('hidden'); }
+  function stopStream() { if (S.stream) S.stream.getTracks().forEach(t => t.stop()); S.stream = null; }
+  function pickMime() {
+    const list = ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm', 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4'];
+    for (const m of list) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} }
+    return '';
+  }
+  async function startCamera() {
+    $('camErr').classList.add('hidden'); $('btnBegin').disabled = true;
+    stopStream();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      return camError('Browser ini tidak mendukung perekaman video. Buka link menggunakan Google Chrome (Android/laptop) atau Safari terbaru (iPhone).');
+    }
+    try {
+      S.stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
+    } catch (e) {
+      const n = e && e.name;
+      return camError(
+        n === 'NotAllowedError' ? 'Akses kamera/mikrofon ditolak. Ketuk ikon gembok/kamera di address bar, izinkan Kamera & Mikrofon, lalu tekan "Coba Lagi".' :
+        n === 'NotFoundError' ? 'Kamera atau mikrofon tidak ditemukan di perangkat ini.' :
+        n === 'NotReadableError' ? 'Kamera sedang dipakai aplikasi lain (Zoom/WhatsApp/kamera). Tutup aplikasi tersebut lalu tekan "Coba Lagi".' :
+        'Kamera tidak dapat diakses (' + n + '). Jika link dibuka dari dalam aplikasi chat, salin link lalu buka di Google Chrome atau Safari.'
+      );
+    }
+    $('preview').srcObject = S.stream;
+    S.mime = pickMime();
+    startMeter();
+    $('btnBegin').disabled = false;
+  }
+  function startMeter() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      if (S.audioCtx) { try { S.audioCtx.close(); } catch (e) {} }
+      S.audioCtx = new AC();
+      const an = S.audioCtx.createAnalyser(); an.fftSize = 512;
+      S.audioCtx.createMediaStreamSource(S.stream).connect(an);
+      const data = new Uint8Array(an.fftSize);
+      const loop = () => {
+        if (!S.audioCtx || S.audioCtx.state === 'closed') return;
+        an.getByteTimeDomainData(data);
+        let peak = 0; for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i] - 128));
+        $('meter').style.width = Math.min(100, peak * 1.6) + '%';
+        requestAnimationFrame(loop);
+      };
+      loop();
+    } catch (e) {}
+  }
+
+  // ---------------- ALUR INTERVIEW ----------------
+  function warnLeave(e) { e.preventDefault(); e.returnValue = ''; }
+
+  $('btnBegin').addEventListener('click', async () => {
+    $('btnBegin').disabled = true;
+    try { S.sess = await api('ivStart', { id: S.id, token: S.token, device: navigator.userAgent }); }
+    catch (e) { $('btnBegin').disabled = false; return camError(e.message); }
+    if (S.audioCtx) { try { S.audioCtx.close(); } catch (e) {} S.audioCtx = null; }
+    $('live').srcObject = S.stream;
+    show('sInterview');
+    window.addEventListener('beforeunload', warnLeave);
+    hideBtns();
+    $('timer').textContent = '0:00';
+    $('phase').textContent = '';
+    const first = S.sess.answered.length === 0;
+    await say(first
+      ? 'Halo ' + S.sess.candidateName + '. Selamat datang di sesi interview untuk posisi ' + S.sess.jobName + '. Saya akan membacakan ' + S.sess.questions.length + ' pertanyaan. Jawablah dengan jelas sambil menatap kamera. Kita mulai.'
+      : 'Selamat datang kembali, ' + S.sess.candidateName + '. Kita lanjutkan dari pertanyaan berikutnya.', 'AI Interviewer');
+    nextQuestion();
+  });
+
+  function firstUnanswered() {
+    const done = new Set(S.sess.answered);
+    for (let i = 0; i < S.sess.questions.length; i++) if (!done.has(i)) return i;
+    return -1;
+  }
+  function renderSteps(cur) {
+    const done = new Set(S.sess.answered);
+    $('steps').innerHTML = S.sess.questions.map((q, i) => '<span class="' + (done.has(i) ? 'done' : i === cur ? 'now' : '') + '"></span>').join('');
+  }
+
+  async function nextQuestion() {
+    const i = firstUnanswered();
+    renderSteps(i);
+    if (i < 0) return finish();
+    S.qIdx = i; S.repeated = false;
+    const q = S.sess.questions[i];
+    hideBtns(); $('upErr').classList.add('hidden');
+    $('bar').style.width = '0%';
+    $('timer').textContent = fmt(q.answerSec);
+    $('phase').textContent = 'AI Interviewer sedang membacakan pertanyaan...';
+    await say(q.text, 'Pertanyaan ' + (i + 1) + ' dari ' + S.sess.questions.length);
+    prepPhase();
+  }
+
+  function prepPhase() {
+    const total = Number(S.sess.prepSec) || 20;
+    let left = total;
+    hideBtns();
+    if (!S.repeated) $('btnRepeat').classList.remove('hidden');
+    $('btnStartNow').classList.remove('hidden');
+    const tick = () => {
+      $('phase').textContent = 'Waktu persiapan: ' + left + ' detik — rekaman dimulai otomatis.';
+      $('timer').textContent = fmt(left);
+      $('bar').style.width = ((total - left) / total * 100) + '%';
+    };
+    tick();
+    clearInterval(S.timerId);
+    S.timerId = setInterval(() => { left--; if (left <= 0) { clearInterval(S.timerId); startRecording(); } else tick(); }, 1000);
+  }
+
+  $('btnStartNow').addEventListener('click', () => { clearInterval(S.timerId); startRecording(); });
+  $('btnRepeat').addEventListener('click', async () => {
+    clearInterval(S.timerId); S.repeated = true; hideBtns();
+    $('phase').textContent = 'Membacakan ulang pertanyaan...';
+    await say(S.sess.questions[S.qIdx].text);
+    prepPhase();
+  });
+
+  function startRecording() {
+    const q = S.sess.questions[S.qIdx];
+    hideBtns();
+    S.chunks = [];
+    const opt = { videoBitsPerSecond: 350000, audioBitsPerSecond: 64000 };
+    if (S.mime) opt.mimeType = S.mime;
+    try { S.rec = new MediaRecorder(S.stream, opt); } catch (e) { S.rec = new MediaRecorder(S.stream); }
+    const started = Date.now();
+    S.rec.ondataavailable = e => { if (e.data && e.data.size) S.chunks.push(e.data); };
+    S.rec.onstop = () => {
+      S.dur = (Date.now() - started) / 1000;
+      S.blob = new Blob(S.chunks, { type: S.rec.mimeType || S.mime || 'video/webm' });
+      upload();
+    };
+    S.rec.start(1000);
+    $('recBadge').classList.add('on');
+    $('btnStop').classList.remove('hidden'); $('btnStop').disabled = true;
+    setTimeout(() => { $('btnStop').disabled = false; }, 5000);
+    const total = Number(q.answerSec) || 90;
+    let left = total;
+    const tick = () => {
+      $('timer').textContent = fmt(left);
+      $('bar').style.width = ((total - left) / total * 100) + '%';
+      $('phase').textContent = left <= 10 ? '⏰ Waktu hampir habis...' : 'Silakan menjawab. Tekan "Selesai Menjawab" bila sudah selesai.';
+    };
+    tick();
+    clearInterval(S.timerId);
+    S.timerId = setInterval(() => { left--; tick(); if (left <= 0) stopRecording(); }, 1000);
+  }
+
+  function stopRecording() {
+    clearInterval(S.timerId);
+    $('recBadge').classList.remove('on');
+    hideBtns();
+    if (S.rec && S.rec.state !== 'inactive') S.rec.stop();
+  }
+  $('btnStop').addEventListener('click', stopRecording);
+
+  function blobToB64(blob) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result).split(',')[1] || '');
+      r.onerror = () => rej(r.error);
+      r.readAsDataURL(blob);
+    });
+  }
+
+  async function upload() {
+    S.retry = upload;
+    hideBtns(); $('upErr').classList.add('hidden');
+    $('phase').textContent = 'Mengirim jawaban... jangan tutup halaman ini.';
+    let b64 = '';
+    try { b64 = await blobToB64(S.blob); } catch (e) {}
+    if (!b64) { showRetry('Rekaman gagal dibaca dari perangkat.'); return; }
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await api('ivUploadAnswer', { id: S.id, token: S.token, idx: S.qIdx, b64: b64, mime: S.blob.type, dur: S.dur });
+        if (S.sess.answered.indexOf(S.qIdx) < 0) S.sess.answered.push(S.qIdx);
+        $('phase').textContent = '✓ Jawaban terkirim.';
+        await sleep(800);
+        return nextQuestion();
+      } catch (e) {
+        if (attempt === 3) return showRetry('Gagal mengirim jawaban: ' + e.message);
+        $('phase').textContent = 'Koneksi lambat, mencoba lagi (' + (attempt + 1) + '/3)...';
+        await sleep(2500 * attempt);
+      }
+    }
+  }
+
+  function showRetry(msg) {
+    $('upErr').textContent = msg + ' Periksa koneksi internet, lalu tekan "Kirim Ulang".';
+    $('upErr').classList.remove('hidden');
+    $('btnRetry').classList.remove('hidden');
+    $('phase').textContent = '';
+  }
+  $('btnRetry').addEventListener('click', () => { if (S.retry) S.retry(); });
+
+  async function finish() {
+    S.retry = finish;
+    hideBtns(); $('upErr').classList.add('hidden');
+    $('phase').textContent = 'Menyimpan sesi interview...';
+    try { await api('ivFinish', { id: S.id, token: S.token }); }
+    catch (e) { return showRetry('Gagal menyelesaikan sesi: ' + e.message + '.'); }
+    window.removeEventListener('beforeunload', warnLeave);
+    stopStream();
+    show('sDone');
+    say('Terima kasih ' + S.sess.candidateName + '. Interview telah selesai. Tim rekrutmen akan segera menghubungi Anda.');
+  }
+})();
+</script>
+</body>
+</html>
